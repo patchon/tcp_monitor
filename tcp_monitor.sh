@@ -68,7 +68,7 @@ g_option_n_forever="0"
 
 
 
-# A function that makes a system call to ss, parses the output, and stores
+# A function that makes a external call to ss, parses the output, and stores
 # it an array for later use. 
 #
 # Arguments, 
@@ -280,6 +280,9 @@ function print_data {
 
   # Lets print a warning to the user if the estimated width isn't enough
   if [[ ! ${g_option_f} ]]; then 
+    # Do the actual printing, 
+    tput clear
+
     if ! terminal_is_wide_enough ${total_width} && [[ ${g_first_run} -eq 1 ]]; then
       warn_wrap='Warning, your output will be wrapped over multiple lines.
                  \nPlease increase your windowsize (if possible) if you want
@@ -288,7 +291,7 @@ function print_data {
     fi 
   fi
 
-  if [[ ${g_option_f} ]]; then
+  if [[ ${g_option_f} && ${g_first_run} == 1 ]]; then
     msg="Output from script is being redirected to ${g_option_f} (options 
     -d=$g_option_d, -n=$g_option_n ) ..."
     echo $msg
@@ -299,9 +302,6 @@ function print_data {
   local term_max_lines=$((term_lines-5))
   local term_notice=""
   local format="%-${g_min_length_col1}s %-${g_min_length_col2}s %-10s %-6s %-3s %-25s"
-
-  # Do the actual printing, 
-  tput clear
 
   # Loop the actual array containing our output from ss (space delimited),
   for row in ${!g_print_arr[*]}; do
@@ -1027,7 +1027,9 @@ if [[ ${g_option_n} == "not_set" ]];then
 fi
 
 # Save screen, 
-tput smcup
+if [[ ! ${g_option_f} ]]; then
+  tput smcup
+fi
 
 # Just loop here until given conditions are true, 
 while [[ ${g_cnt} -le ${g_option_n} ]]; do
@@ -1051,222 +1053,8 @@ while [[ ${g_cnt} -le ${g_option_n} ]]; do
 done
 
 # Restore screen and exit, 
-tput rmcup
+if [[ ! ${g_option_f} ]]; then
+  tput rmcup
+fi
+
 exit 0 
-
-
-
-
-
-
-
-
-
-
-
-
-
-#echo -e "\nD-> $g_option_d"
-#echo -e "\nF-> $g_option_f"
-#echo -e "\nN-> $g_option_n"
-
-
-#  while read -r line; do
-#      printf '%s\n' "$line"
-#  done < "$config_file_content"
-
-#
-#  for line in $config_file_content; do
-#    cnt=$((cnt+1)) 
-#    IFS='=' read option value <<< "$line"
-#      #echo $line
-#      #sleep 3
-#    if [[ $line =~ $rerefreshes ]]; then
-#      validate_options "-n" $value
-#      g_param_num_refreshes="$value"
-#      g_param_num_refreshes_static="$g_param_num_refreshes"
-#      g_param_refresh_infinite="0"
-#    elif [[ $line =~ $redelay ]]; then
-#      validate_options "-d" $value
-#      g_param_num_refreshes="$value"
-#      g_param_num_refreshes_static="$g_param_num_refreshes"
-#      g_param_refresh_infinite="0"
-#    elif [[ $line =~ $refile ]]; then
-#      validate_options "-f" $value
-#      g_param_out_file="$value"
-#    else
-#      if [[ ! $line =~ $recomment ]]; then
-#        err_msg="Error parsing option ($line) in '$config' on line $cnt"
-#        error "$err_msg"
-#      fi
-#    fi
-#  done
-
-#function validate_options {
-#  local opt_to_validate=$1
-#  local val_to_validate=$2 
-#  
-#  
-# # local threshold_max_delay=120 # Doesn't seem to make sense to specify an 
-#                                # update every two minutes, but what do I 
-#                                # know, ;)
-#  
-#  #local threshold_min_del_ref=1 # Minimum refreshes are 1 and same with
-#                                # the delay. 
-#
-#  #local refresh_delay_re="^-[dn]$"
-#  
-#  # Refresh-rate and delay should be a number, 
-#  #if [[ $opt_to_validate =~ $refresh_delay_re ]]; then
-#  #  err_msg='Option '$opt_to_validate' should be followed by a number (not 
-#  #           '$val_to_validate').'
-#  #  [[ ! "$val_to_validate" =~ $g_re_digits ]] && error "$err_msg"
-#
-#  #  # If it's a number, check so it's not below threshold, 
-#  #  err_msg='Option '$opt_to_validate' can'"'"'t be less than 
-#  #          '$threshold_min_del_ref''
-#  #  [[ "$val_to_validate" -lt "$threshold_min_del_ref" ]] && error "$err_msg"
-#  #fi
-#
-#  ## Tip user if value seems unreasonable high, 
-#  #if [[ $opt_to_validate == "-n" ]]; then
-#  #  # Give user pro-tip if values seems cheeky high, 
-#  #  if [[ ${#val_to_validate} -gt $threshold_refreshes ]]; then
-#  #    local tip='You seem to specify a very high number-of-refreshes-value,
-#  #               you would be better of skpping the '$opt_to_validate'-flag.
-#  #               Then we will refresh forever.'
-#  #    show_warning $tip 
-#  #  fi
-#
-#  ## Delay should be a number, 
-#  #elif [[ $opt_to_validate == "-d" ]]; then
-#  #  # Give user pro-tip if values seems cheeky high, 
-#  #  if [[ ${val_to_validate} -gt $threshold_max_delay ]]; then
-#  #    local tip='You seem to have specified a very long delay 
-#  #               ('${val_to_validate}') between the refreshes.\nYou are ofcourse
-#  #               welcome to do so, but it doesn''t really make sense.'
-#  #    show_warning "$tip" 
-#  #  fi
-#
-#  # Check if we can write to file
-#  elif [[ $opt_to_validate == "-f" ]]; then
-#
-#    # First off, figure out what we are dealing with, extract dir/file-name 
-#    # accourding to the dirname-command assumptions - we use the dirname-command
-#    # here and not shell-inbuilt-functionality (substr/globbing) since parsing a
-#    # dirname isn't always that easy, the dirname-command has already figured 
-#    # that out for us. 
-#    # 
-#    # We turn of the bash's errexit-option here since there isn't a good way for
-#    # us to detect an error from the dirname-command. It's very unlikely for the
-#    # dirname-command to actual fail, but since I want to be consistent with the
-#    # rest of the script and capture the output from dirname and print a custom 
-#    # error-message to the user we do it like this. There may be a better way of
-#    # doing this, with that being said though, this works as expected. 
-#    set +o errexit
-#    dir=$(dirname ${val_to_validate} 2>&1) 
-#    
-#    # Check the return, 
-#    if [[ $? -ne 0 ]]; then
-#      err_msg="Couldn't read dirname from '${val_to_validate}' ($dir)."
-#      error "${err_msg}"
-#    fi
-#    set +i errexit
-#
-#    # So, we got a dirname from the -f parameter, just check if if it's only a 
-#    # dirname given,
-#    dir_end_re="/$"
-#    if [[ "$val_to_validate" =~ $dir_end_re ]]; then
-#      err_msg='-f must have a filename as parameter and not a directory 
-#               ('$val_to_validate').'
-#      error "$err_msg"
-#    fi
-#    
-#    # If the given directory doesn't exist, try to create it for the user, 
-#    # bail out if that fails. 
-#    if [[ ! -d $dir ]]; then
-#      out=$(mkdir -p $dir 2>&1 || :)
-#      
-#      if [[ $out ]]; then
-#        err_msg='Directory '"'"$dir"'"' doesn'"'"'t exist, and couldn'"'"'t be 
-#                 created ('$out').'
-#        error "$err_msg"
-#      fi
-#    fi 
-#    
-#    # Test if we can create and write to the file. Now the redirection is done 
-#    # by the shell before printf runs, so we need tp redirect stderr not only 
-#    # for the printf-builtin, but to the whole shell in which the command runs.
-#    # We do this by encapsulate the printf-builtin in {}. By using a builtin-
-#    # command, we can skip a dependency to for eg. the 'touch-command'. 
-#    out=$({ printf > $val_to_validate; } 2>&1)
-#
-#    if [[ $? -ne 0 ]]; then
-#      local x=""
-#      local error="" 
-#
-#      IFS=':' read x x x error  <<< "$out"
-#      
-#      err_msg="Couldn't create output-file ${val_to_validate} (${error/ /})."
-#      error "$err_msg"
-#    fi
-#
-#    echo $out
-#    exit
-#
-#    # 
-#    # shopt -s extglob  
-#    # IFS=':' read trash trash trash error  <<< "$out"
-#    # if [[ $? -ne 0 ]]; then
-#    #  err_msg='Couldn'"'"'t create output-file '"'"$val_to_validate"'"' 
-#    #  ('${error##*( )}').'
-#    #  error "$err_msg" 
-#    # fi 
-#
-#    # However, using just touch we can simplify it by just doing, 
-#    # The thought here is that touch will generate a message if it fails. 
-#    # capture that message and print it if there is such message. Otherwise
-#    # we succeeded with createing the file. 
-#    #out=$(touch "$val_to_validate" 2>&1 || :)
-#    #
-#    ## If we 
-#    #if [[ $out ]]; then
-#    #  local x="" error=""
-#    #  IFS=':' read x x error  <<< "$out"
-#    #  
-#    #  err_msg="Couldn't create output-file ${val_to_validate} (${error/ /})."
-#    #  error "$err_msg"
-#    #fi
-#      
-#    
-#
-#
-#exit
-#    
-##file=${$val_to_validate##*/}
-#    #err_msg='-f must have a filename as parameter'
-#    #[[ -z $filename ]] && error "$err_msg"
-#
-#
-#    
-#    #[[ ! -w "$val_to_validate" ]] && error "$err_msg"
-#  
-#  # Check if config exists, 
-# # elif [[ $opt_to_validate == "-c" ]]; then
-# #   err_msg='Configuration-file '"'"''$val_to_validate''"'"' doesn'"'"'t exist 
-# #            (or is not readable by current user ['$USER']).'
-# #   [[ ! -f "$val_to_validate" ]] && error "$err_msg"
-# # fi
-#
-# # # We get here ?
-# # # Home safe.
-# # return 0
-#} 
-
-
-# A function to com
-#function calculate_min_width {
-#  
-#  [[ $1 > $2 ]] && return 0 
-#  return 1 
-#}
