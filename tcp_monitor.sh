@@ -1,34 +1,28 @@
 #!/usr/bin/env bash
-
 set -o nounset
 
-# ideas
-# - make new connections at the end
-# - convert sec into something more readable
-# - resolve addr
-# PROC_SOCK_CTX selinux 
-# multiple pids using the same socket
-      # 
-      # Additional note, I've observed that the output actually can be, 
-      # 'users:(("app-name",pid=X,fd=Y),("app-name",pid=X,fd=Y))' but that's 
-      # fine since that only display the same app with different pids using
+# Copyright (C) 2014 Patrik Martinsson <martinsson@patrik.gmail.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+#
+# Mode: vim, tabstop=2; softtabstop=2; shiftwidth=2; 
+#
+# This is the tcp_monitor.sh, man tcp_monitor for more information. 
+# Source is maintaned at <https://github.com/patchon/tcp_monitor>
 
 
-      # naming convention 
-# error parsing functions 
-#set -o errexit
-
-
-# check for null output from ss
-# check so max length 10 digit
-
-# rationale regarding pipefail, errexit 
-# re-variable-nameing
-
-# set up trap
-# Check if function is called right, 
-
-# fix all error_msges to tabs 
 
 # * * * * * * * * * * * * * * * * * * * * 
 # Global variables, named g_variable-name
@@ -445,7 +439,7 @@ function parse_command_line {
         is_opt_set "${opt_d_set}"
         [[ ! ${value:-} ]] && error "Option ${opt} must have an argument."
         
-        validate_d_option "${opt}" "${value}" "precedence"
+        validate_d_option "${opt}" "${value}"
         g_opt_d_set="${opt}"
         shift
       ;;
@@ -458,7 +452,7 @@ function parse_command_line {
         is_opt_set "${opt_f_set}"
         [[ ! ${value:-} ]] && error "Option ${opt} must have an argument."
         
-        validate_f_option "${opt}" "${value}" "precedence"
+        validate_f_option "${opt}" "${value}"
         g_opt_f_set="${opt}"
         shift
       ;;
@@ -508,9 +502,9 @@ function parse_config_file {
   # values are done in validate_*_option-functions. 
   local re_comment="^#.*$"
   local re_empty_lines="^$"
-  local re_delay="^DELAY="
-  local re_file="^FILE="
-  local re_refreshes="^NUMBER_OF_REFRESHES="
+  local re_delay="^DELAY[ ]*="
+  local re_file="^FILE[ ]*="
+  local re_refreshes="^NUMBER_OF_REFRESHES[ ]*="
 
   # Read in the configfile and loop every line, 
   while read -r line; do
@@ -520,12 +514,15 @@ function parse_config_file {
     [[ ${line} =~ ${re_comment}     ]] && continue
     [[ ${line} =~ ${re_empty_lines} ]] && continue 
     
-    # Remove quotes, 
-    line=${line//\"}
-    line=${line//\'}
     
     # Set the delimiter and read values, 
     IFS='=' read option value <<< "${line}"
+    
+    # Remove quotes, and leading/trailing spaces, 
+    value=${value//\"}
+    value=${value//\'}
+    value="${value##*( )}" 
+    value="${value%%*( )}"
 
     # If a line matches, first check if value already been specified 
     # (by cli-opt), if not, validate value (and set it if validated), 
@@ -614,7 +611,7 @@ function validate_d_option {
     error "${err_msg}"
   fi
 
-  # Give user pro-tip if values seems cheeky high, 
+  # Doesn't make sense to make resrreshes this rare, 
   if [[ "${val_to_validate}" -gt "${threshold_max_delay}" ]]; then
     err_msg="Option '${opt}' should be reasonable (shorter than 120 seconds). It
 						just doesn't make sense to refresh the screen this rarely."
@@ -942,7 +939,7 @@ function show_usage {
 
   Available Options,             Default            Min              Max
   -c | --config-file                -                -                -
-  -d | --delay                      1                1             No limit
+  -d | --delay                      1                1               120 
   -n | --number-of-refreshes     Infinite            1             No limit  
   -f | --output-file             stdout              -                -
 
