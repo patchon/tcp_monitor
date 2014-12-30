@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -o nounset
+set   -o nounset
 
 # Copyright (C) 2014 Patrik Martinsson <martinsson@patrik.gmail.com>
 #
@@ -23,10 +23,13 @@ set -o nounset
 # Source is maintaned at <https://github.com/patchon/tcp_monitor>
 
 
-
 # * * * * * * * * * * * * * * * * * * * * 
 # Global variables, named g_variable-name
 #
+
+# Turn on the bash's extended globbing feature. Instead of turning it off and 
+# in the script, we just turn it on here and leave it like that.
+shopt -s extglob
 
 # Just to "keep track" of how many updates we have left, 
 g_cnt=0      
@@ -98,6 +101,13 @@ function get_output_from_ss {
     err_msg="Call to sed failed. This should not happen 
              ($(strip_error "${output}"))."
     error "${err_msg}"
+  fi
+  
+  # Handle the case were we dont have *any* established connections, 
+  if [[ -z $output ]]; then
+    err_msg="Didn't get *any* output from ss, you don't seem to have any
+						tcp-established-connections available."
+    error "$err_msg"
   fi
 
   # Define the array where we will store data that we later want to print. 
@@ -384,8 +394,6 @@ function parse_command_line {
     fi
   done
 
-  shopt -s extglob
-  local error=0
   # Loop through input parameters. I'm not a fan of getopt/getopts. Never 
   # seem to use it, maybe it has some features that will make life easier for
   # me, but I always just shift in parameters like this and parse them. Works 
@@ -397,27 +405,14 @@ function parse_command_line {
     
     # If value is empty, set flag 
     [[ ! "${2:-}" ]] && error "Option ${opt} must have an argument."
-    # error="1"
     
     # If we have a value, strip value from leading/trailing spaces, 
-    #if [[ $error -ne 1  ]]; then
     value="${2##*( )}" 
     value="${value%%*( )}"
 
     # Test again after we remove spaces, 
     [[ ! "${value:-}" ]] && error "Option ${opt} must have an argument."
     
-    #echo "->>>>>>>> $value<<<<<<<<<<<<-"
-    # This is ridiculous, but try to handle empty quotations and also if 
-    # try to handle escape quotes. This are is always a bit confusing. 
-    #if [[ ${value} == \"\" || ${value} == \" ]]; then 
-    #  error "Option ${opt} must have an argument."
-    #fi
-
-    #fi 
-    
-    #    [[ ! ${value:-} ]] && error "Option ${opt} must have an argument."
-
     case "${opt}" in
 
       # Handle -c/--config-file 
@@ -477,9 +472,8 @@ function parse_command_line {
       ;;
     esac
 
-    # Shift the argument-list, reset error
+    # Shift the argument-list,
     shift
-    error=0
   done
 }
 
@@ -513,7 +507,6 @@ function parse_config_file {
     # Skip comments and empty lines, 
     [[ ${line} =~ ${re_comment}     ]] && continue
     [[ ${line} =~ ${re_empty_lines} ]] && continue 
-    
     
     # Set the delimiter and read values, 
     IFS='=' read option value <<< "${line}"
@@ -597,10 +590,6 @@ function validate_d_option {
   local opt=${1}
   local val_to_validate=${2}
 
-#  local tip="You seem to have specified a very long delay ('${val_to_validate}')
-#             between the refreshes.\nYou are of course welcome to do so, but it 
-#             doesn't really make sense."
-
   local threshold_max_delay=120 # Doesn't seem to make sense to specify an 
                                 # update every two minutes,
   
@@ -611,13 +600,11 @@ function validate_d_option {
     error "${err_msg}"
   fi
 
-  # Doesn't make sense to make resrreshes this rare, 
+  # Doesn't make sense to make refresh this rarely,
   if [[ "${val_to_validate}" -gt "${threshold_max_delay}" ]]; then
     err_msg="Option '${opt}' should be reasonable (shorter than 120 seconds). It
 						just doesn't make sense to refresh the screen this rarely."
     error "${err_msg}"
-
-#    show_warning "${tip}" 
   fi
 
   # Value is verified, set variable, 
@@ -708,10 +695,6 @@ function validate_f_option {
 function validate_n_option {
   local opt=${1}
   local val_to_validate=${2}
-  #local tip="You seem to specify a very high number-of-refreshes-value, you 
-  #           would be better of skipping the '${opt}'-flag. Then the refresh will
-  #           be set until forever."
-
   local threshold_max_refreshes=7 # Note that this is the *length* of the 
                                   # string, not the actual number itself, 
   
@@ -722,14 +705,12 @@ function validate_n_option {
     error "${err_msg}"
   fi
 
-  # Give user pro-tip if values seems cheeky high, 
+  # Exit if the value seems unreasonable high, 
   if [[ ${#val_to_validate} -ge ${threshold_max_refreshes} ]]; then
     err_msg="Option '${opt}' should be reasonable (shorter than
 						${threshold_max_refreshes}). If you want an value this high, skip 
 						this parameter as the script then will refresh forever."
     error "${err_msg}"
-
-    #show_warning "$tip" 
   fi
 
   # Value is verified, set variable, 
@@ -949,6 +930,7 @@ function show_usage {
 
   exit 0 
 }
+
 
 
 # A function that will create the "=" around the top-header, 
