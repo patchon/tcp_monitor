@@ -1,8 +1,27 @@
-#!/bin/bash
-
+#!/usr/bin/env bash
 set -o nounset
 
-# This is the test-script for tcp_monitor.sh
+# Copyright (C) 2014 Patrik Martinsson <martinsson@patrik.gmail.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+#
+# Mode: vim, tabstop=2; softtabstop=2; shiftwidth=2; 
+#
+# This is the test-script for tcp_monitor.sh 
+# Source is maintaned at <https://github.com/patchon/tcp_monitor>
+
 
 
 # * * * * * * * * * * * * * * * * * * * * 
@@ -391,16 +410,16 @@ function testcase_e {
       # A bit sloppy, just get me the lines 
       lines=$(cat "${log_file}" | wc -l)
 
-      if [[ "${lines}" -gt 5 ]]; then
+      if [[ "${lines}" -gt 4 ]]; then
         print_pass "Success : ${log_file} contained ${lines} number of lines and
                     contains given parameters." "${exit_val}"
       else
-        print_fail "${log_file} contained fewer than 5 lines. This mostly
+        print_fail "${log_file} contained fewer than 4 lines. This mostly
                     indicates an error ($out)" "${exit_val}"
       fi
     fi
   else
-    print_fail "${log_file} contained fewer than 5 lines. This mostly indicates 
+    print_fail "${log_file} contained fewer than 4 lines. This mostly indicates 
                 an error" "${exit_val}"
   fi
   echo ""
@@ -543,17 +562,17 @@ function testcase_g {
   if [[ $exit_val -eq 0 ]]; then
     if grep -q "Refreshing 2 / 2 with an interval of 2 second(s)" \
       "${out_file}";then
-      # Make sure we have atleast 5 lines
+      # Make sure we have atleast 4 lines
       lines=$(cat "${out_file}" | wc -l)
-      if [[ "${lines}" -gt 5 ]]; then
+      if [[ "${lines}" -gt 4 ]]; then
         print_pass "'${out_file}' contained ${lines} number of lines *and*
                  configuration was set correctly." "${exit_val}"
       else
-        print_fail "${g_fail} '${out_file}' contained fewer than 5 lines. 
+        print_fail "'${out_file}' contained fewer than 4 lines. 
                     This mostly indicates an error." "${exit_val}"
       fi
     else
-        print_fail "${g_fail} Could not verify that parameters where set 
+        print_fail "Could not verify that parameters where set 
                     correctly." "${exit_val}"
     fi
   else
@@ -619,17 +638,17 @@ function testcase_h {
     # these values are not the same as from the config-file.
     if grep -q "Refreshing 3 / 3 with an interval of 2 second(s)" \
       "${out_file}";then
-      # Make sure we have atleast 5 lines
+      # Make sure we have atleast 4 lines
       lines=$(cat "${out_file}" | wc -l)
-      if [[ "${lines}" -gt 5 ]]; then
+      if [[ "${lines}" -gt 4 ]]; then
         print_pass "'${out_file}' contained ${lines} number of lines *and*
                     configuration was set correctly." "${exit_val}"
       else
-        print_fail "${g_fail} '${out_file}' contained fewer than 5 lines. 
+        print_fail "'${out_file}' contained fewer than 4 lines. 
                     This mostly indicates an error." "${exit_val}"
       fi
     else
-        print_fail "${g_fail} Could not verify that parameters where set 
+        print_fail "Could not verify that parameters where set 
                     correctly." "${exit_val}"
     fi
   else
@@ -701,32 +720,37 @@ function testcase_i {
       
       # Check each field so it contains what we expect, 
       if [[ ! $local_addr =~ $re_ip_port ]]; then
-        print_fail "${g_fail} Local-port-field ($local_addr) doesn't 
+        print_fail "Local-port-field ($local_addr) doesn't 
                     match our re (${re_ip_port})." "$exit_val"
       fi
       
       if [[ ! $remote_addr =~ $re_ip_port ]]; then
-        print_fail "${g_fail} Remote-port-field ($remote_addr) doesn't 
+        print_fail "Remote-port-field ($remote_addr) doesn't 
                     match our re (${re_ip_port})." "$exit_val"
       fi
       
       if [[ ! $duration =~ $re_num || ! $pid =~ $re_num ]]; then
-        print_fail "${g_fail} Duration-field ($duration) doesn't match our re 
+        print_fail "Duration-field ($duration) doesn't match our re 
                     (${re_num})." "$exit_val"
       fi
 
       if [[ ! $pid =~ $re_num ]]; then
-        print_fail "${g_fail} Pid-field ($pid) doesn't match our re 
+        print_fail "Pid-field ($pid) doesn't match our re 
                     (${re_num})." "$exit_val"
       fi
       
       if [[ ! $prog ]]; then
-        print_fail "${g_fail} Progname-field ($prog) is empty." "$exit_val"
+        print_fail "Progname-field ($prog) is empty." "$exit_val"
       fi
       
       print_pass "Fields ($local_addr - $remote_addr - $duration - $pid - $prog)
                   seeems fine." "${exit_val}"
+    else
+      print_fail "Could not verify output from ss in ${out_file}." "$exit_val"
     fi
+  else
+    print_fail "Unexpected exit from ${g_tcp_monitor_wo_timeout} 
+    ($out)" "$exit_val"
   fi
 
   # Terminate the connection, 
@@ -768,7 +792,12 @@ testcase_h
 testcase_i
 
 if [[ $g_failure -ne 0 ]]; then
-  echo "Didn't pass all tests ! (use -v to get verbose output)" >&2 
+  echo -n "Didn't pass all tests ! " >&2
+  if [[ $g_verbose -eq 0 ]]; then
+    echo "(use -v to get verbose output)" >&2 
+  else
+    echo ""
+  fi
   exit 1
 fi
 
