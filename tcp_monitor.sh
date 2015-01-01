@@ -567,7 +567,7 @@ function validate_c_option {
   # Check if config exists, 
   if [[ ! -f "${val_to_validate}" ]];then 
     err_msg="Configuration-file '${val_to_validate}' doesn't seem to exist
-						(or atleast is not readable by current user ['${USER}'])."
+						(or atleast is not readable by the user running the script)."
     error "${err_msg}"
   fi
   
