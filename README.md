@@ -86,9 +86,9 @@ that specific method was used.
     above, we could do it in the rpm, or in the script, but we will still have 
     the same issues. 
 
- **So, basically these approaches seems rather 'hacky' and over-complicated to
-   me.** 
-   
+ **So, basically these approaches seems rather 'hacky' and unnecessarily 
+   complicated to me.** 
+
    Read more under '''Known limitations''' about this. 
 
  
