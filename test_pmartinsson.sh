@@ -434,7 +434,7 @@ function testcase_e {
 
 # * * * * * * 
 # A function that tests valid commandline-options for output-file where 
-# directory does't exist and should be created
+# directory does't exist and shouldn't be created
 #
 # Arguments, 
 # - Function doesn't take any arguments. 
@@ -525,7 +525,7 @@ function testcase_g {
 
 # * * * * * * 
 # A function that tests valid commandline-options for config-file where the 
-# config-file contains only valid.
+# config-file contains only valid values.
 #
 # Arguments, 
 # - Function doesn't take any arguments. 
