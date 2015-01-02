@@ -99,11 +99,11 @@ that specific method was used.
  Basically we are covered pretty good here, but there are a few cases we don't 
  handle. 
  
-* I think there is a special output if we have se-linux enabled, this is 
-  not handled today. 
-
 * We don't handle the case when multiple pid's are using the same sockets, 
   this wouldn't be to hard to implement though. 
+
+* We don't handle the ss-ouput of selinux-sockets-context (ss -z).
+
 
 #### Gui :  
  
