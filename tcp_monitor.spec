@@ -1,7 +1,7 @@
 # Mode: vim, tabstop=2; softtabstop=2; shiftwidth=2; 
 Summary       : An "established-TCP-connection"-monitoring-tool
 Name          : tcp_monitor
-Version       : 1.4
+Version       : 1.5
 Release       : 1%{?dist}
 Group         : Applications/System
 URL           : https://github.com/patchon/%{name}/
