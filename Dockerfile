@@ -16,10 +16,16 @@ RUN cd ~/rpmbuild/SOURCES/ && \
 RUN cd ~/rpmbuild/SPECS/ && \
     wget https://raw.githubusercontent.com/patchon/tcp_monitor/master/tcp_monitor.spec
 
+# Lint the spec, 
+RUN rpmlint ~/rpmbuild/SPECS/tcp_monitor.spec
+
 # Download build-dependencies (they are already met, but we could add 
 # dependencies in the future), and build the actual rpm, 
 RUN yum-builddep -y ~/rpmbuild/SPECS/tcp_monitor.spec && \
     rpmbuild -ba ~/rpmbuild/SPECS/tcp_monitor.spec
+
+# Lint the rpm, 
+RUN rpmlint ~/rpmbuild/RPMS/noarch/tcp_monitor-1.5-1.fc21.noarch.rpm
 
 # Install it, 
 RUN yum install -y /root/rpmbuild/RPMS/noarch/tcp_monitor-1.5-1.fc21.noarch.rpm
