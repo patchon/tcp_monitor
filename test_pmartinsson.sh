@@ -74,14 +74,14 @@ function print_pass {
   local message=${1}
   local exit_code=${2}
 
-  tput setaf 2
+  [[ $TERM != "dumb" ]] && tput setaf 2
   printf "%s\n" "${g_pass} (exit = $exit_code)"
-  tput setaf 0
+  [[ $TERM != "dumb" ]] && tput setaf 0
   
   if [[ ${g_verbose} -eq 1 ]]; then 
-    tput setaf 4
+    [[ $TERM != "dumb" ]] && tput setaf 4
     echo -e ${message} "\n"
-    tput setaf 0
+    [[ $TERM != "dumb" ]] && tput setaf 0
   fi
 }
 
@@ -100,14 +100,14 @@ function print_fail {
   local message="${1}"
   local exit_code="${2}"
 
-  tput setaf 1
+  [[ $TERM != "dumb" ]] && tput setaf 1
   printf "%s\n" "${g_fail} (exit = $exit_code)"
-  tput setaf 0
+  [[ $TERM != "dumb" ]] && tput setaf 0
   
   if [[ 1 -eq 1 ]]; then 
-    tput setaf 4
+    [[ $TERM != "dumb" ]] && tput setaf 4
     echo -e ${message} "\n"
-    tput setaf 0
+    [[ $TERM != "dumb" ]] && tput setaf 0
   fi
 
   g_failure="1"
