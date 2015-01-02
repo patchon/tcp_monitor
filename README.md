@@ -211,9 +211,9 @@ tcp_monitor, it will validate the following,
   refresh rate the user has set). We actually **already** suffer from this, 
   if you have a quick eye you will notice that the date in the header will
   skip a second "here and there".
-- Handle selinux (I'm not really sure if we do this today), 
+- Handle selinux-sockets-context (ss -z), 
 - Add version-flag 
-- Set trap for various stuff, like sorting order, quitting etc. 
+- Bind keys for sorting order order
 
 
 #### Coding wise :
