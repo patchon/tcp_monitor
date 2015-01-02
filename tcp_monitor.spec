@@ -8,13 +8,8 @@ URL           : https://github.com/patchon/%{name}/
 Source0       : https://github.com/patchon/%{name}/archive/%{name}-%{version}.tar.gz
 License       : GPLv2+ and Public Domain
 BuildArch     : noarch
-Requires      : coreutils
-Requires      : iproute
-Requires      : ncurses 
-Requires      : sed
-BuildRequires : coreutils
-BuildRequires : grep
-BuildRequires : telnet 
+Requires      : coreutils, iproute, ncurses, grep, sed,
+Buildrequires : coreutils, iproute, ncurses, grep, sed, telnet
 
 %description
 This package contains a small tool for monitoring established TCP-connections. 
