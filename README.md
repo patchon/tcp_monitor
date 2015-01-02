@@ -197,6 +197,17 @@ tcp_monitor, it will validate the following,
   necessarily tells us *what is broken*, but it will at least tell us that 
   *something is broken* and we need to fix it.
  
+### Spin up dockercontainer to build rpm, 
+The provided docker-file will spin up a fedora:latest container and pull the 
+source for tcp_monitor from github, build it, verify it and install it. 
+To test it, just type, 
+```bash
+cd $(mktemp -d)
+wget https://raw.githubusercontent.com/patchon/tcp_monitor/master/Dockerfile
+sudo docker build .
+```
+If everything goes well you'll see a message something similar to, 
+*Successfully built 17a65fc1fdf3*
 
 ## Improvements / Ideas 
 
