@@ -31,6 +31,9 @@ set   -o nounset
 # in the script, we just turn it on here and leave it like that.
 shopt -s extglob
 
+# The default ss-delimiter, 
+g_ss_delim=","
+
 # Just to "keep track" of how many updates we have left, 
 g_cnt=0      
 
@@ -171,45 +174,20 @@ function get_output_from_ss {
       # But that isn't totally true. First off, the appname-part is enclosed 
       # with "", secondly on versions above iproute-3.12 (looking at the source 
       # of ss from the iproute-package), the actual output is 
-      # 'users:(("app-name",pid=X,fd=Y))'. So, to make this script somewhat 
-      # compatible with rhel 7 (which comes with iproute-3.12), fedora 20/21,
-      # lets determine the delimiter. 
-      
+      # 'users:(("app-name",pid=X,fd=Y))'. The delimiter-determination is done
+      # in the set_default_ss_delimiter-function.
+
       # Extract the app-name, 
       var="${info_col3#*\"}"
       app_name="${var%%\"*}"
       app_name="${app_name:=${error}}"
 
-      # Set the default delimiter,
-      # Note, if the release-file isn't there we are kinda screwed anyways with
-      # trying to determine version. If we want this to be more portable (that 
-      # is outside rhel, we should definitely use a better way of determining 
-      # the output from ss). Maybe look at the actual version of ss, even though
-      # it wasn't really that easy to parses 
-      delim="="
-      if [[ -f "/etc/redhat-release" ]]; then
-        local version
-        local re_redhat="Red Hat Enterprise"
-
-        version=$(cat /etc/redhat-release 2>&1)
-        
-        # Again, we cannot be to careful when checking return codes from 
-        # external commands, 
-        if [[ ${?} -ne 0 ]]; then
-          err_msg="Call to cat failed. This should not happen 
-                  ($(strip_error "${version}"))."
-          error "${err_msg}"
-        fi
-
-        [[ ${version}  =~ $re_redhat ]] && delim=","
-      fi
-      
       # Extract the actual pid & fd,
-      var="${info_col3#*${delim}}"
+      var="${info_col3#*${g_ss_delim}}"
       app_pid="${var%%,*}"
       app_pid="${app_pid:=${error}}"
 
-      var="${info_col3##*${delim}}"
+      var="${info_col3##*${g_ss_delim}}"
       app_fd="${var%%)*}"
       app_fd="${app_fd:=${error}}"
 
@@ -970,7 +948,8 @@ function create_top_bottom_header {
 
 
 
-# A function that determine if the user is root or not. 
+# A function that test if the string is a "row of numbers, starting 
+# with a non-zero-value"
 #
 # Arguments, 
 # - Function doesn't take any argument.
@@ -982,15 +961,69 @@ function create_top_bottom_header {
 function is_number_and_not_zero {
   local val_to_validate=${1}
    
-  [[ $val_to_validate =~ $g_re_digits ]] && return 0 
+  [[ ${val_to_validate} =~ ${g_re_digits} ]] && return 0 
 
   return 1
 }
 
 
+
+# A function that determines the delimiter for ss, 
+#
+# Arguments, 
+# - Function doesn't take any argument.
+#
+# Returns,
+# - Function doesn't return in that sense. 
+# - Sets the g_ss_delim
+#
+function set_default_ss_delimiter {
+  # Set the default delimiter,
+  # Note, if the release-file isn't there we are kinda screwed anyways with
+  # trying to determine version. If we want this to be more portable (that 
+  # is outside rhel, we should definitely use a better way of determining 
+  # the output from ss). Maybe look at the actual version of ss, even though
+  # it wasn't really that easy to parse 
+  if [[ -f "/etc/os-release" ]]; then
+    local version
+    local dist
+    local x 
+ 
+    dist=$(grep "Red Hat" /etc/os-release 2>&1)
+ 
+   	# If it's not rhel, determine version of fedora. 
+    if [[ ${?} -ne 0 ]]; then
+      version=$(grep "VERSION_ID=" /etc/os-release 2>&1)
+      IFS='=' read x version <<< "$version"    
+      
+      # If version is lower than 21, use the , as delimiter 
+      if [[ ${version} =~ ${g_re_digits} ]]; then
+        if [[ ${version} -gt 20 ]]; then
+          g_ss_delim="="
+        fi
+      fi       
+    fi
+  fi
+}
  
 
 
+# A function that just restores the screen and exits, 
+#
+# Arguments, 
+# - Function doesn't take any argument.
+#
+# Returns,
+# - Function doesn't return in that sense, just exits our program.
+#
+function exit_and_restore_screen {
+  # Restore screen and exit, 
+  if [[ ! ${g_option_f} ]]; then
+    tput rmcup
+  fi
+
+  exit 0 
+} 
 
 
 
@@ -1024,10 +1057,16 @@ if [[ ${g_option_n} == "not_set" ]];then
   g_option_n_forever=1
 fi
 
+# Set the default ss_delimiter, 
+set_default_ss_delimiter 
+
 # Save screen, 
 if [[ ! ${g_option_f} ]]; then
   tput smcup
 fi
+
+# Let's trap sigint, 
+trap exit_and_restore_screen SIGINT
 
 # Just loop here until given conditions are true, 
 while [[ ${g_cnt} -le ${g_option_n} ]]; do
@@ -1050,9 +1089,5 @@ while [[ ${g_cnt} -le ${g_option_n} ]]; do
   g_first_run="0"
 done
 
-# Restore screen and exit, 
-if [[ ! ${g_option_f} ]]; then
-  tput rmcup
-fi
-
-exit 0 
+# Just restore the screen and exit, 
+exit_and_restore_screen 
