@@ -1,0 +1,8 @@
+[Unit]
+Description=tcp_monitor 
+
+[Service]
+ExecStart=/usr/bin/tcp_monitor.sh -c /etc/tcpmonitor.conf
+
+[Install]
+WantedBy=network-online.target
