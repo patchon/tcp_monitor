@@ -191,7 +191,7 @@ tcp_monitor, it will validate the following,
   only valid options that are overridden by the command line-options.
 
 * A regression test that will test that we got the expected output from ss. This
-  is done in two steps, firstly we do an **nc google.com 80**, secondly we 
+  is done in two steps, firstly we do an **telnet google.com 80**, secondly we 
   verify the output in **tcp_monitor** is as expected. I call this a regression-
   test since it should tell us if anything is out of order, it doesn't 
   necessarily tells us *what is broken*, but it will at least tell us that 
