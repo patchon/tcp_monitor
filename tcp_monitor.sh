@@ -103,18 +103,17 @@ function get_output_from_ss {
     error "${err_msg}"
   fi
   
-  # Handle the case were we dont have *any* established connections, 
-  if [[ -z $output ]]; then
-    err_msg="Didn't get *any* output from ss, you don't seem to have any
-						tcp-established-connections available."
-    error "$err_msg"
-  fi
-
   # Define the array where we will store data that we later want to print. 
   # Also the variables for the column-width. This is used globally. 
   g_print_arr=()
   g_min_length_col1=20
   g_min_length_col2=22
+
+  # Handle the case were we dont have *any* established connections, 
+  if [[ -z $output ]]; then
+    g_print_arr+=("no connections ;;;;;")
+    return 
+  fi
 
   # Now do the actual parsing of the data, 
   for row in ${output}; do
@@ -281,7 +280,17 @@ function print_data {
   local app_name=""
   local warn=""
   local warn_wrap=""
+  local date_now=""
 
+  # Get the time and add it to the header, 
+  date_now=$(date)
+
+  if [[ ${?} -ne 0 ]];then
+    err_msg="Call to date failed. This should not happen 
+            ($(strip_error "${output}"))."
+    error "${err_msg}"
+  fi
+  
   # Lets print a warning to the user if the estimated width isn't enough
   if [[ ! ${g_option_f} ]]; then 
     # Do the actual printing, 
@@ -293,6 +302,11 @@ function print_data {
                  one-line-output.'
       show_warning "$warn_wrap"
     fi 
+  
+    # Set variables, 
+    local term_lines=$(tput lines) 
+    local term_max_lines=$((term_lines-5))
+    local term_notice=""
   fi
 
   if [[ ${g_option_f} && ${g_first_run} == 1 ]]; then
@@ -301,10 +315,6 @@ function print_data {
     echo $msg
   fi
 
-  # Set variables, 
-  local term_lines=$(tput lines) 
-  local term_max_lines=$((term_lines-5))
-  local term_notice=""
   local format="%-${g_min_length_col1}s %-${g_min_length_col2}s %-10s %-6s %-3s %-25s"
 
   # Loop the actual array containing our output from ss (space delimited),
@@ -325,7 +335,9 @@ function print_data {
       if [[ ${g_option_n_forever} -ne 1 ]]; then
         msg="Refreshing ${g_cnt} / ${g_option_n_static}"
       fi
-      printf_wrapper "%s\n" "${msg} with an interval of ${g_option_d} second(s)"
+  
+      printf_wrapper "%s\n" \
+                     "${msg} with an interval of ${g_option_d} second(s) - ${date_now}"
 
       create_top_bottom_header ${total_width}
     fi
@@ -942,7 +954,14 @@ function show_usage {
 # - Function doesn't "return" in that sense, 
 #
 function create_top_bottom_header {
-  header_width=$(tput cols)  
+  
+  header_width="50"
+  
+  # We do not do this when we dont have a terminal, 
+  if [[ $TERM != "dumb" ]]; then 
+    header_width=$(tput cols)  
+  fi 
+
   for ((x = 0; x < ${header_width}; x++));do 
     printf_wrapper "="
   done
@@ -1012,10 +1031,10 @@ fi
 
 # Just loop here until given conditions are true, 
 while [[ ${g_cnt} -le ${g_option_n} ]]; do
-  
+
   # Get the data to print, 
   get_output_from_ss 
-  
+
   # Print the actual data, 
   print_data
   
