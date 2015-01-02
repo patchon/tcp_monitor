@@ -622,7 +622,7 @@ function testcase_h {
 	EOF
 
   print_header "$header_message"
-  pretty_print "${g_tcp_monitor_wo_timeout} -c \"${conf_file}\" -f "${out_file} -d2 -n3""
+  pretty_print "${g_tcp_monitor_wo_timeout} -c \"${conf_file}\" -f \"${out_file}\" -d2 -n3"
   out=$(${g_tcp_monitor_wo_timeout} -c "${conf_file}" -f "${out_file}" -d 2 -n 3 2>&1)
   exit_val=$?
 
