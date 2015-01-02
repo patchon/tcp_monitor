@@ -20,7 +20,6 @@ It comes bundled with a systemd-unit for enabling the tool at boot as a service.
 # the archives, 
 %setup -q -n %{name}-%{name}-%{version}
 
-
 %build
 # Execute our testing suite to make sure everything is fine. 
 # You could get rid of the output here if it's getting annoying in the long run,
@@ -42,8 +41,7 @@ install -m644 tcpmonitor.conf     %{buildroot}%{_sysconfdir}
 install -m644 tcp_monitor.service %{buildroot}%{_unitdir}
 
 # We do not use the inbuilt systemd macros here, since we don't 
-# want to enable this service as default by the "systemd/fedora-prefix-strategy".
-
+# want to enable this service as default by the "systemd/fedora-preset-strategy".
 %post
 # Just reload systemd to make it pickup our unit, 
 if [ $1 -eq 1 ]; then 
@@ -76,6 +74,8 @@ fi
 %{_unitdir}/tcp_monitor.service
 
 %changelog
+* Fri Jan 02 2015 Patrik Martinsson <martinsson.patrik@gmail.com> - 1.5-1
+- Fixing grammar in spec. 
 * Fri Jan 02 2015 Patrik Martinsson <martinsson.patrik@gmail.com> - 1.4-1
 - Again with the manpage...
 * Fri Jan 02 2015 Patrik Martinsson <martinsson.patrik@gmail.com> - 1.3-1
